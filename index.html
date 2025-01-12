@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>长难句分析工具</title>
+    <style>
+        body {
+            background-color: #f5f5f5;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .original-sentence {
+            background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .original-sentence h2 {
+            color: #1d1d1f;
+            font-size: 24px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .original-text {
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #fff;
+            border-radius: 12px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .analysis-container {
+            background: #fff;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        button {
+            background: #0071e3;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 20px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        button:hover {
+            background: #0077ed;
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .step-indicator {
+            text-align: center;
+            color: #86868b;
+            font-size: 16px;
+            margin: 20px 0;
+        }
+
+        .step {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .step.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .step h3 {
+            color: #1d1d1f;
+            font-size: 20px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .language-toggle {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .en, .zh {
+            background: #f5f5f7;
+            padding: 20px;
+            border-radius: 12px;
+            line-height: 1.6;
+            font-size: 16px;
+        }
+
+        .highlight {
+            background: linear-gradient(120deg, rgba(255, 243, 205, 0.5) 0%, rgba(255, 243, 205, 0.8) 100%);
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .highlight:hover {
+            background: rgba(255, 243, 205, 1);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            background: #0071e3;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 原句展示区 -->
+        <div class="original-sentence">
+            <h2>原句</h2>
+            <div class="original-text">
+                Virginia Woolf's provocative statement about her intentions in writing Mrs. Dalloway has regularly been ignored by the critics, since it highlights an aspect of her literary interests very different from the traditional picture of the "poetic" novelist concerned with examining states of reverie and vision and with following the intricate pathways of individual consciousness.
+            </div>
+            <div class="original-text">
+                弗吉尼亚・伍尔夫关于她创作《达洛维夫人》意图的那番颇具争议性的言论，常常被评论家们所忽视，因为它凸显了她文学兴趣的一个方面，而这一方面与人们传统印象中那种关注审视幻想和幻觉状态以及追踪个人意识的复杂路径的"诗意"小说家形象截然不同。
+            </div>
+        </div>
+
+        <!-- 分析展示区 -->
+        <div class="analysis-container">
+            <div class="controls">
+                <button id="prevBtn" onclick="prevStep()">上一步</button>
+                <button id="nextBtn" onclick="nextStep()">下一步</button>
+            </div>
+
+            <div class="progress-bar">
+                <div class="progress" id="progressBar"></div>
+            </div>
+            
+            <div class="step-indicator">
+                步骤 <span id="currentStep">1</span> / <span id="totalSteps">5</span>
+            </div>
+
+            <div id="steps">
+                <!-- 步骤内容与之前相同，但每个step的内容布局更改为上下布局 -->
+                <div class="step active" data-step="1">
+                    <h3>主干提取</h3>
+                    <div class="language-toggle">
+                        <div class="en">
+                            Virginia Woolf's statement has regularly been ignored by the critics, since it highlights an aspect.
+                        </div>
+                        <div class="zh">
+                            弗吉尼亚・伍尔夫的言论常常被评论家们忽视，因为它凸显了一个方面。
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step" data-step="2">
+                    <h3>第一次展开</h3>
+                    <div class="language-toggle">
+                        <div class="en">
+                            Virginia Woolf's provocative statement <span class="highlight">about her intentions in writing Mrs. Dalloway</span> has regularly been ignored by the critics, since it highlights an aspect.
+                        </div>
+                        <div class="zh">
+                            弗吉尼亚・伍尔夫<span class="highlight">关于她创作《达洛维夫人》意图的那番颇具争议性</span>的言论，常常被评论家们所忽视，因为它凸显了一个方面。
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step" data-step="3">
+                    <h3>第二次展开</h3>
+                    <div class="language-toggle">
+                        <div class="en">
+                            Virginia Woolf's provocative statement about her intentions in writing Mrs. Dalloway has regularly been ignored by the critics, since it highlights an aspect <span class="highlight">of her literary interests</span>.
+                        </div>
+                        <div class="zh">
+                            弗吉尼亚・伍尔夫关于她创作《达洛维夫人》意图的那番颇具争议性的言论，常常被评论家们所忽视，因为它凸显了她<span class="highlight">文学兴趣</span>的一个方面。
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step" data-step="4">
+                    <h3>第三次展开</h3>
+                    <div class="language-toggle">
+                        <div class="en">
+                            Virginia Woolf's provocative statement about her intentions in writing Mrs. Dalloway has regularly been ignored by the critics, since it highlights an aspect of her literary interests very different from the traditional picture of the "poetic" novelist <span class="highlight">concerned with examining states of reverie and vision and with following the intricate pathways of individual consciousness</span>.
+                        </div>
+                        <div class="zh">
+                            弗吉尼亚・伍尔夫关于她创作《达洛维夫人》意图的那番颇具争议性的言论，常常被评论家们所忽视，因为它凸显了她文学兴趣的一个方面，而这一方面与人们传统印象中<span class="highlight">那种关注审视幻想和幻觉状态以及追踪个人意识的复杂路径</span>的"诗意"小说家形象截然不同。
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step" data-step="5">
+                    <h3>第四次展开</h3>
+                    <div class="language-toggle">
+                        <div class="en">
+                            Virginia Woolf's provocative statement about her intentions in writing Mrs. Dalloway has regularly been ignored by the critics, since it highlights an aspect of her literary interests very different from the traditional picture of the "poetic" novelist <span class="highlight">concerned with examining states of reverie and vision and with following the intricate pathways of individual consciousness</span>.
+                        </div>
+                        <div class="zh">
+                            弗吉尼亚・伍尔夫关于她创作《达洛维夫人》意图的那番颇具争议性的言论，常常被评论家们所忽视，因为它凸显了她文学兴趣的一个方面，而这一方面与人们传统印象中<span class="highlight">那种关注审视幻想和幻觉状态以及追踪个人意识的复杂路径</span>的"诗意"小说家形象截然不同。
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        const totalSteps = 5;
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const progressBar = document.getElementById('progressBar');
+
+        function updateStepDisplay() {
+            document.querySelectorAll('.step').forEach(step => {
+                step.classList.remove('active');
+            });
+            document.querySelector(`.step[data-step="${currentStep}"]`).classList.add('active');
+            document.getElementById('currentStep').textContent = currentStep;
+            
+            // 更新进度条
+            const progress = (currentStep - 1) / (totalSteps - 1) * 100;
+            progressBar.style.width = `${progress}%`;
+            
+            // 更新按钮状态
+            prevBtn.disabled = currentStep === 1;
+            nextBtn.disabled = currentStep === totalSteps;
+        }
+
+        function nextStep() {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                updateStepDisplay();
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                updateStepDisplay();
+            }
+        }
+
+        // 初始化
+        updateStepDisplay();
+    </script>
+</body>
+</html>
